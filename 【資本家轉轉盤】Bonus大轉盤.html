@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>丐幫電競轉盤</title>
+  <style>
+    :root { --text:#f8fafc; --border:rgba(255,255,255,0.08); --shadow:0 18px 50px rgba(0,0,0,0.35); --accent2:#ef4444; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif; background: radial-gradient(circle at top, rgba(245,158,11,0.12), transparent 35%), linear-gradient(180deg, #08101d 0%, #111827 100%); color:var(--text); min-height:100vh; }
+    .wrap { max-width:980px; margin:0 auto; padding:24px; }
+    .card { background:rgba(17,24,39,0.9); border:1px solid var(--border); border-radius:24px; box-shadow:var(--shadow); padding:24px; position:relative; min-height:700px; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; }
+    .pointer { width:0; height:0; border-left:18px solid transparent; border-right:18px solid transparent; border-top:42px solid var(--accent2); position:absolute; top:18px; z-index:5; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35)); }
+    .wheel-box { position:relative; width:min(78vw,620px); height:min(78vw,620px); display:grid; place-items:center; }
+    canvas { width:100%; height:100%; border-radius:50%; background:#0b1220; box-shadow: inset 0 0 0 10px rgba(255,255,255,0.06), 0 20px 40px rgba(0,0,0,0.35); }
+    .center-cap { position:absolute; width:96px; height:96px; border-radius:50%; background: radial-gradient(circle at 35% 35%, #fde68a, #f59e0b 65%, #b45309 100%); border:6px solid rgba(255,255,255,0.18); box-shadow:0 10px 24px rgba(0,0,0,0.35); display:grid; place-items:center; font-weight:800; color:#3b1d00; z-index:4; }
+    .controls { margin-top:22px; display:flex; justify-content:center; }
+    button { border:none; border-radius:999px; padding:12px 18px; font-size:15px; font-weight:700; cursor:pointer; background:linear-gradient(135deg, #fbbf24, #f59e0b); color:#231200; box-shadow:0 12px 24px rgba(245,158,11,0.28); }
+    .result { margin-top:18px; min-height:64px; width:100%; border-radius:18px; background:rgba(255,255,255,0.04); border:1px solid var(--border); display:grid; place-items:center; padding:14px; text-align:center; }
+    .result strong { font-size:24px; color:#fde68a; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card">
+      <div class="pointer"></div>
+      <div class="wheel-box">
+        <canvas id="a0" width="900" height="900"></canvas>
+        <div class="center-cap">GO</div>
+      </div>
+      <div class="controls"><button id="a1">開始抽獎</button></div>
+      <div class="result" id="a2">按下 <strong>開始抽獎</strong> 來轉動轉盤</div>
+    </section>
+  </div>
+  <script>
+    const z0=[175,161,198,108,90,105,125,173];
+    const z1=[225,144,191,91,109,88,12410,35959,26512,23332,36764,36658,30411,12421,76,207,206,225,194,22872,36640,30362,108,142,154,222,241,99,14,63,108,39053,29678,144,247,102,131,101,45,142,257,144,20055,29487,133,82,91,165,144,157,168,77,14,88,20097,29680,154,154,255,102,131,101,45,142,257,144,22058,29487,133,82,86,165,144,157,168,62,52];
+    const z2=['#ef4444','#f97316','#f59e0b','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#14b8a6'];
+
+    function q0() {
+      let out = '';
+      for (let i = 0; i < z1.length; i++) {
+        out += String.fromCharCode((z1[i] - 13) ^ z0[i % z0.length]);
+      }
+      const p = JSON.parse(out);
+      return { title: p.t, prizes: p.p.map(v => ({ name: v[0], weight: v[1], size: v[2] })) };
+    }
+
+    const q1 = q0();
+    const q2 = { rotation: 0, spinning: false, animationId: null };
+    const q3 = document.getElementById('a0');
+    const q4 = q3.getContext('2d');
+    const q5 = document.getElementById('a1');
+    const q6 = document.getElementById('a2');
+    document.title = '丐幫電競轉盤';
+
+    function q7(prizes, key) { return prizes.reduce((sum, prize) => sum + (Number(prize[key]) || 1), 0); }
+    function q8(ctx, text, x, y, maxWidth, lineHeight) {
+      const chars = [...text], lines = [];
+      let current = '';
+      for (const ch of chars) {
+        const test = current + ch;
+        if (ctx.measureText(test).width > maxWidth && current) { lines.push(current); current = ch; }
+        else current = test;
+      }
+      if (current) lines.push(current);
+      const shown = lines.slice(0, 3);
+      const offsetY = -((shown.length - 1) * lineHeight) / 2;
+      shown.forEach((line, i) => ctx.fillText(line, x, y + offsetY + i * lineHeight));
+    }
+    function q9() {
+      const prizes = q1.prizes, totalSize = q7(prizes, 'size'), cx = q3.width / 2, cy = q3.height / 2, radius = 390;
+      q4.clearRect(0, 0, q3.width, q3.height);
+      q4.save();
+      q4.translate(cx, cy);
+      q4.rotate(q2.rotation);
+      let startAngle = -Math.PI / 2;
+      prizes.forEach((prize, index) => {
+        const arc = ((Number(prize.size) || 1) / totalSize) * Math.PI * 2;
+        const endAngle = startAngle + arc;
+        q4.beginPath();
+        q4.moveTo(0, 0);
+        q4.arc(0, 0, radius, startAngle, endAngle);
+        q4.closePath();
+        q4.fillStyle = z2[index % z2.length];
+        q4.fill();
+        q4.strokeStyle = 'rgba(255,255,255,0.18)';
+        q4.lineWidth = 4;
+        q4.stroke();
+
+        const midAngle = startAngle + arc / 2;
+        q4.save();
+        q4.rotate(midAngle);
+        q4.translate(radius * 0.66, 0);
+        q4.rotate(Math.PI / 2);
+        q4.fillStyle = '#fff';
+        q4.font = 'bold 30px Noto Sans TC, Microsoft JhengHei, sans-serif';
+        q4.textAlign = 'center';
+        q4.textBaseline = 'middle';
+        q8(q4, prize.name, 0, 0, 180, 34);
+        q4.restore();
+
+        startAngle = endAngle;
+      });
+      q4.restore();
+      q4.beginPath();
+      q4.arc(cx, cy, radius + 8, 0, Math.PI * 2);
+      q4.lineWidth = 12;
+      q4.strokeStyle = 'rgba(255,255,255,0.08)';
+      q4.stroke();
+    }
+    function qa(prizes) {
+      const totalWeight = q7(prizes, 'weight');
+      let random = Math.random() * totalWeight;
+      for (let i = 0; i < prizes.length; i++) {
+        random -= Number(prizes[i].weight) || 1;
+        if (random <= 0) return i;
+      }
+      return prizes.length - 1;
+    }
+    function qb(prizes, targetIndex) {
+      const totalSize = q7(prizes, 'size');
+      let acc = 0;
+      for (let i = 0; i < prizes.length; i++) {
+        const arc = ((Number(prizes[i].size) || 1) / totalSize) * Math.PI * 2;
+        if (i === targetIndex) return -Math.PI / 2 + acc + arc / 2;
+        acc += arc;
+      }
+      return -Math.PI / 2;
+    }
+    function qc(angle) { const full = Math.PI * 2; return ((angle % full) + full) % full; }
+    function qd(str) { return str.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
+    function qe() {
+      if (q2.spinning) return;
+      const prizes = q1.prizes;
+      q2.spinning = true;
+      q5.disabled = true;
+      q6.innerHTML = '轉盤旋轉中...';
+
+      const chosenIndex = qa(prizes);
+      const chosenPrize = prizes[chosenIndex];
+      const centerAngle = qb(prizes, chosenIndex);
+      const current = qc(q2.rotation);
+      const targetAtTop = Math.PI * 1.5;
+      let delta = targetAtTop - centerAngle - current;
+      delta = qc(delta);
+
+      const extraRounds = (5 + Math.floor(Math.random() * 3)) * Math.PI * 2;
+      const finalRotation = q2.rotation + extraRounds + delta;
+      const startRotation = q2.rotation;
+      const duration = 5200;
+      const startTime = performance.now();
+
+      function animate(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 4);
+        q2.rotation = startRotation + (finalRotation - startRotation) * eased;
+        q9();
+        if (t < 1) q2.animationId = requestAnimationFrame(animate);
+        else {
+          q2.rotation = qc(finalRotation);
+          q9();
+          q2.spinning = false;
+          q5.disabled = false;
+          q6.innerHTML = '抽中：<strong>' + qd(chosenPrize.name) + '</strong>';
+        }
+      }
+      cancelAnimationFrame(q2.animationId);
+      q2.animationId = requestAnimationFrame(animate);
+    }
+    q5.addEventListener('click', qe);
+    q9();
+  </script>
+</body>
+</html>

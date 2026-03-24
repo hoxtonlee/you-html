@@ -17,16 +17,28 @@
 /* 背景（粉色） */
 body{
     font-family:"Microsoft JhengHei";
-    background:
-        radial-gradient(circle at top left, rgba(255,255,255,0.35), transparent 25%),
-        radial-gradient(circle at top right, rgba(255,255,255,0.18), transparent 20%),
-        linear-gradient(135deg,#ffc0cb,#ff69b4);
-    color:white;
-    text-align:center;
-    padding:30px;
-    letter-spacing:1px;
-}
 
+    background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.45), transparent 30%),
+        radial-gradient(circle at 80% 10%, rgba(255,255,255,0.25), transparent 25%),
+        radial-gradient(circle at 50% 90%, rgba(255,255,255,0.2), transparent 30%),
+        linear-gradient(
+            135deg,
+            #ffc0cb,
+            #ff69b4,
+            #ff85a2
+        );
+
+    color:white;
+
+    text-align:center;
+
+    padding:30px;
+
+    letter-spacing:1px;
+
+    min-height:100vh;
+}
 /* 標題 */
 h1{
     font-size:34px;
@@ -34,6 +46,9 @@ h1{
     position:relative;
     display:inline-block;
     padding-bottom:12px;
+    text-shadow:
+    0 0 10px rgba(255,255,255,0.8),
+    0 0 20px rgba(255,255,255,0.4);
 }
 h1::after{
     content:"";
@@ -61,26 +76,60 @@ h1::after{
 }
 /* 卡片按鈕 */
 .card{
-    background:rgba(255,255,255,0.22);
-    color:white;
+
+    /* 玻璃粉色感 */
+    background:linear-gradient(
+        145deg,
+        rgba(255,255,255,0.45),
+        rgba(255,255,255,0.18)
+    );
+
+    /* 深玫瑰文字（推薦色） */
+    color:#7a1e48;
+
     padding:22px;
-    border-radius:20px;
+
+    border-radius:22px;
+
     font-size:20px;
     font-weight:bold;
+
     width:220px;
+
     transition:0.25s;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.18);
-    border:2px solid rgba(255,255,255,0.35);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    outline:1px solid rgba(255,255,255,0.3);
-    text-shadow: 0 2px 4px rgba(0,0,0,0.25);
+
+    /* 立體陰影 */
+    box-shadow:
+        0 12px 28px rgba(0,0,0,0.18);
+
+    /* 玻璃邊框 */
+    border:2px solid rgba(255,255,255,0.45);
+
+    /* 玻璃模糊 */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    /* 柔光邊 */
+    outline:1px solid rgba(255,255,255,0.25);
+
+    /* 文字更清楚 */
+    text-shadow: 0 1px 2px rgba(255,255,255,0.5);
 }
 
 .card:hover{
-    background:rgba(255,255,255,0.30);
-    transform:translateY(-5px) scale(1.03);
-    box-shadow: 0 18px 35px rgba(0,0,0,0.25);
+
+    background:linear-gradient(
+        145deg,
+        rgba(255,255,255,0.6),
+        rgba(255,255,255,0.25)
+    );
+
+    transform:
+        translateY(-6px)
+        scale(1.04);
+
+    box-shadow:
+        0 20px 40px rgba(0,0,0,0.28);
 }
 
 /* 移除底線 */
